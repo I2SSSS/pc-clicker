@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>PC Clicker Mobile</title>
-
+<title>PC Clicker Simplifié</title>
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -21,7 +20,7 @@ body {
   cursor: pointer;
   transition: transform 0.05s;
   margin: 20px 0;
-  touch-action: manipulation; /* empêche double-tap zoom */
+  touch-action: manipulation;
 }
 
 #pc:active {
@@ -42,12 +41,12 @@ body {
   border: 2px solid #ef4444;
 }
 
-input {
+input, select {
   padding: 12px;
   width: 90%;
   margin-bottom: 10px;
-  text-align: center;
   font-size: 1rem;
+  text-align: center;
 }
 
 button {
@@ -65,22 +64,171 @@ button {
 }
 
 @media (max-width: 500px) {
-  #pc {
-    font-size: 25vw; /* plus grand sur mobile, stable */
-  }
-  input, button {
-    font-size: 1.2rem;
-    padding: 16px;
-  }
+  #pc { font-size: 25vw; }
+  input, select, button { font-size: 1.2rem; padding: 16px; }
 }
 </style>
 </head>
-
 <body>
 
 <h2 id="pcName">💻 Mon PC</h2>
-<input id="nameInput" placeholder="Nom du PC (code secret ?)"/>
+
+<div class="box">
+  <h3>Paramètres</h3>
+  <label>Mode interface :</label>
+  <select id="modeSelect">
+    <option value="desktop">PC</option>
+    <option value="mobile">Mobile</option>
+  </select>
+</div>
 
 <p>PC : <span id="pcCount">0</span></p>
-<p>PC / seconde : <span id="pcPerSecond">0
+<p>PC / seconde : <span id="pcPerSecond">0</span></p>
 
+<div id="pc">💻</div>
+
+<div class="box">
+  <h2>Magasin</h2>
+  <button onclick="buy(0)">🖥️ PC Bureau (+1 PC/s) — <span id="cost0"></span></button>
+  <button onclick="buy(1)">🖧 Serveur (+5 PC/s) — <span id="cost1"></span></button>
+  <button onclick="buy(2)">🌐 Data Center (+20 PC/s) — <span id="cost2"></span></button>
+</div>
+
+<div class="box reset">
+  <h2>⚠️ Reset Partie</h2>
+  <button onclick="resetGame()">RESET LA PARTIE</button>
+</div>
+
+<div class="box cheat" id="cheatPanel" style="display:none">
+  <h2>⚠️ CHEAT PANEL</h2>
+  <button onclick="addPC()">+10 000 PC</button>
+  <button onclick="boost()">+100 PC/s</button>
+  <button onclick="startAutoClick()">Auto Click ON</button>
+  <button onclick="stopAutoClick()">Auto Click OFF</button>
+  <button onclick="resetMoney()">Reset Money</button>
+  <button onclick="disableCheat()">Fermer</button>
+</div>
+
+<script>
+let pc = 0;
+let pcPerSecond = 0;
+let autoClickInterval = null;
+
+const pcEl = document.getElementById("pc");
+const pcCountEl = document.getElementById("pcCount");
+const pcPerSecondEl = document.getElementById("pcPerSecond");
+const pcNameEl = document.getElementById("pcName");
+const cheatPanelEl = document.getElementById("cheatPanel");
+const modeSelectEl = document.getElementById("modeSelect");
+
+const baseUpgrades = [
+  { cps: 1, cost: 10 },
+  { cps: 5, cost: 100 },
+  { cps: 20, cost: 500 }
+];
+let upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+
+// Sauvegarde
+function save() {
+  localStorage.setItem("pcSave", JSON.stringify({
+    pc,
+    pcPerSecond,
+    upgrades,
+    name: pcNameEl.textContent,
+    mode: modeSelectEl.value
+  }));
+}
+
+// Chargement
+function load() {
+  const saveData = JSON.parse(localStorage.getItem("pcSave"));
+  if (!saveData) return;
+
+  pc = saveData.pc;
+  pcPerSecond = saveData.pcPerSecond;
+  upgrades = saveData.upgrades;
+  pcNameEl.textContent = saveData.name || "💻 Mon PC";
+  if(saveData.mode) modeSelectEl.value = saveData.mode;
+  applyMode();
+}
+
+// UI
+function updateUI() {
+  pcCountEl.textContent = pc;
+  pcPerSecondEl.textContent = pcPerSecond;
+  upgrades.forEach((u, i) => {
+    document.getElementById("cost"+i).textContent = u.cost + " PC";
+  });
+}
+
+// Clic / Touch
+function handleClick(e){
+  e.preventDefault();
+  pc++;
+  updateUI();
+  save();
+}
+pcEl.addEventListener("click", handleClick);
+pcEl.addEventListener("touchstart", handleClick);
+
+// Achats
+function buy(i){
+  if(pc>=upgrades[i].cost){
+    pc-=upgrades[i].cost;
+    pcPerSecond+=upgrades[i].cps;
+    upgrades[i].cost = Math.floor(upgrades[i].cost*1.5);
+    updateUI();
+    save();
+  }
+}
+
+// Cheat
+nameInputEl.addEventListener("input", ()=>{
+  const name = nameInputEl.value;
+  pcNameEl.textContent = name || "💻 Mon PC";
+  if(name==="131213") cheatPanelEl.style.display="block";
+  save();
+});
+
+function addPC(){ pc+=10000; updateUI(); save(); }
+function boost(){ pcPerSecond+=100; updateUI(); save(); }
+function startAutoClick(){ if(autoClickInterval)return; autoClickInterval=setInterval(()=>{ pc++; updateUI(); save(); },100);}
+function stopAutoClick(){ clearInterval(autoClickInterval); autoClickInterval=null; }
+function resetMoney(){ pc=0; updateUI(); save();}
+function disableCheat(){ stopAutoClick(); cheatPanelEl.style.display="none";}
+
+// Reset total
+function resetGame(){
+  if(!confirm("⚠️ Tu es sûr ?")) return;
+  stopAutoClick();
+  pc=0; pcPerSecond=0;
+  upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+  pcNameEl.textContent="💻 Mon PC";
+  nameInputEl.value="";
+  cheatPanelEl.style.display="none";
+  save();
+  updateUI();
+}
+
+// Gain auto
+setInterval(()=>{ pc+=pcPerSecond; updateUI(); save(); },1000);
+
+// Mode PC / Mobile
+function applyMode(){
+  if(modeSelectEl.value==="mobile"){
+    pc.style.fontSize="25vw";
+    document.querySelectorAll("button,input,select").forEach(el=>el.style.fontSize="1.2rem");
+  } else {
+    pc.style.fontSize="15vw";
+    document.querySelectorAll("button,input,select").forEach(el=>el.style.fontSize="1rem");
+  }
+}
+modeSelectEl.addEventListener("change", ()=>{ applyMode(); save(); });
+
+// Démarrage
+load();
+updateUI();
+applyMode();
+</script>
+</body>
+</html>
