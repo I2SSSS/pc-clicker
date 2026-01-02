@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>PC Clicker</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  text-align: center;
+  user-select: none;
+}
+
+#pc {
+  font-size: 120px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+#pc:active {
+  transform: scale(0.9);
+}
+
+.box {
+  background: #1e293b;
+  padding: 20px;
+  margin: 20px auto;
+  width: 340px;
+  border-radius: 10px;
+}
+
+.box.reset {
+  background: #1f2937;
+  border: 2px solid #ef4444;
+}
+
+input {
+  padding: 8px;
+  width: 90%;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+button {
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.cheat {
+  background: #7f1d1d;
+}
+</style>
+</head>
+
+<body>
+
+<h2 id="pcName">💻 Mon PC</h2>
+<input id="nameInput" placeholder="Nom du PC (code secret ?)"/>
+
+<p>PC : <span id="pcCount">0</span></p>
+<p>PC / seconde : <span id="pcPerSecond">0</span></p>
+
+<div id="pc">💻</div>
+
+<div class="box">
+  <h2>Magasin</h2>
+  <button onclick="buy(0)">🖥️ PC Bureau (+1 PC/s) — <span id="cost0"></span></button>
+  <button onclick="buy(1)">🖧 Serveur (+5 PC/s) — <span id="cost1"></span></button>
+  <button onclick="buy(2)">🌐 Data Center (+20 PC/s) — <span id="cost2"></span></button>
+</div>
+
+<!-- 🔴 RESET PARTIE (VISIBLE POUR TOUS) -->
+<div class="box reset">
+  <h2>⚠️ Reset Partie</h2>
+  <button onclick="resetGame()">RESET LA PARTIE</button>
+</div>
+
+<!-- PANEL CHEAT -->
+<div class="box cheat" id="cheatPanel" style="display:none">
+  <h2>⚠️ CHEAT PANEL</h2>
+  <button onclick="addPC()">+10 000 PC</button>
+  <button onclick="boost()">+100 PC/s</button>
+  <button onclick="startAutoClick()">Auto Click ON</button>
+  <button onclick="stopAutoClick()">Auto Click OFF</button>
+  <button onclick="resetMoney()">Reset Money</button>
+  <button onclick="disableCheat()">Fermer</button>
+</div>
+
+<script>
+// 🔹 VARIABLES
+let pc = 0;
+let pcPerSecond = 0;
+let autoClickInterval = null;
+
+const pcEl = document.getElementById("pc");
+const pcCountEl = document.getElementById("pcCount");
+const pcPerSecondEl = document.getElementById("pcPerSecond");
+const pcNameEl = document.getElementById("pcName");
+const nameInputEl = document.getElementById("nameInput");
+const cheatPanelEl = document.getElementById("cheatPanel");
+
+const baseUpgrades = [
+  { cps: 1, cost: 10 },
+  { cps: 5, cost: 100 },
+  { cps: 20, cost: 500 }
+];
+
+let upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+
+// 🔹 SAUVEGARDE
+function save() {
+  localStorage.setItem("pcSave", JSON.stringify({
+    pc,
+    pcPerSecond,
+    upgrades,
+    name: pcNameEl.textContent
+  }));
+}
+
+// 🔹 CHARGEMENT
+function load() {
+  const saveData = JSON.parse(localStorage.getItem("pcSave"));
+  if (!saveData) return;
+
+  pc = saveData.pc;
+  pcPerSecond = saveData.pcPerSecond;
+  upgrades = saveData.upgrades;
+  pcNameEl.textContent = saveData.name || "💻 Mon PC";
+}
+
+// 🔹 UI
+function updateUI() {
+  pcCountEl.textContent = pc;
+  pcPerSecondEl.textContent = pcPerSecond;
+  upgrades.forEach((u, i) => {
+    document.getElementById("cost" + i).textContent = u.cost + " PC";
+  });
+}
+
+// 🔹 CLIC PC
+pcEl.addEventListener("click", () => {
+  pc++;
+  updateUI();
+  save();
+});
+
+// 🔹 ACHAT
+function buy(i) {
+  if (pc >= upgrades[i].cost) {
+    pc -= upgrades[i].cost;
+    pcPerSecond += upgrades[i].cps;
+    upgrades[i].cost = Math.floor(upgrades[i].cost * 1.5);
+    updateUI();
+    save();
+  }
+}
+
+// 🔹 NOM + CODE SECRET
+nameInputEl.addEventListener("input", () => {
+  const name = nameInputEl.value;
+  pcNameEl.textContent = name || "💻 Mon PC";
+
+  if (name === "131213") {
+    cheatPanelEl.style.display = "block";
+  }
+
+  save();
+});
+
+// 🔹 GAIN AUTO
+setInterval(() => {
+  pc += pcPerSecond;
+  updateUI();
+  save();
+}, 1000);
+
+// 🧨 CHEATS
+function addPC() {
+  pc += 10000;
+  updateUI();
+  save();
+}
+
+function boost() {
+  pcPerSecond += 100;
+  updateUI();
+  save();
+}
+
+function startAutoClick() {
+  if (autoClickInterval) return;
+  autoClickInterval = setInterval(() => {
+    pc++;
+    updateUI();
+    save();
+  }, 100);
+}
+
+function stopAutoClick() {
+  clearInterval(autoClickInterval);
+  autoClickInterval = null;
+}
+
+function resetMoney() {
+  pc = 0;
+  updateUI();
+  save();
+}
+
+function disableCheat() {
+  stopAutoClick();
+  cheatPanelEl.style.display = "none";
+}
+
+// 🔴 RESET TOTAL DE LA PARTIE
+function resetGame() {
+  if (!confirm("⚠️ Tu es sûr de vouloir reset la partie ?")) return;
+
+  stopAutoClick();
+  pc = 0;
+  pcPerSecond = 0;
+  upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+  pcNameEl.textContent = "💻 Mon PC";
+  nameInputEl.value = "";
+  cheatPanelEl.style.display = "none";
+
+  localStorage.removeItem("pcSave");
+  updateUI();
+}
+
+// 🔹 DÉMARRAGE
+load();
+updateUI();
+</script>
+
+</body>
+</html>
