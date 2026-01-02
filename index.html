@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>PC Clicker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PC Clicker Mobile</title>
 
 <style>
 body {
@@ -11,12 +12,15 @@ body {
   color: white;
   text-align: center;
   user-select: none;
+  margin: 0;
+  padding: 0;
 }
 
 #pc {
-  font-size: 120px;
+  font-size: 15vw; /* taille adaptative */
   cursor: pointer;
   transition: transform 0.1s;
+  margin: 20px 0;
 }
 
 #pc:active {
@@ -25,9 +29,10 @@ body {
 
 .box {
   background: #1e293b;
-  padding: 20px;
-  margin: 20px auto;
-  width: 340px;
+  padding: 15px;
+  margin: 15px auto;
+  width: 90%;
+  max-width: 400px;
   border-radius: 10px;
 }
 
@@ -37,22 +42,35 @@ body {
 }
 
 input {
-  padding: 8px;
+  padding: 10px;
   width: 90%;
   margin-bottom: 10px;
   text-align: center;
+  font-size: 1rem;
 }
 
 button {
-  padding: 10px;
-  font-size: 16px;
+  padding: 12px;
+  font-size: 1rem;
   cursor: pointer;
   width: 100%;
   margin-top: 5px;
+  border: none;
+  border-radius: 6px;
 }
 
 .cheat {
   background: #7f1d1d;
+}
+
+@media (max-width: 500px) {
+  #pc {
+    font-size: 25vw; /* plus grand sur mobile */
+  }
+  input, button {
+    font-size: 1.2rem;
+    padding: 14px;
+  }
 }
 </style>
 </head>
@@ -74,7 +92,7 @@ button {
   <button onclick="buy(2)">🌐 Data Center (+20 PC/s) — <span id="cost2"></span></button>
 </div>
 
-<!-- 🔴 RESET PARTIE (VISIBLE POUR TOUS) -->
+<!-- 🔴 RESET PARTIE VISIBLE POUR TOUS -->
 <div class="box reset">
   <h2>⚠️ Reset Partie</h2>
   <button onclick="resetGame()">RESET LA PARTIE</button>
@@ -142,8 +160,14 @@ function updateUI() {
   });
 }
 
-// 🔹 CLIC PC
+// 🔹 CLIC / TOUCH PC
 pcEl.addEventListener("click", () => {
+  pc++;
+  updateUI();
+  save();
+});
+pcEl.addEventListener("touchstart", (e) => {
+  e.preventDefault();
   pc++;
   updateUI();
   save();
@@ -240,3 +264,4 @@ updateUI();
 
 </body>
 </html>
+
