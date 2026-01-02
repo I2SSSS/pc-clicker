@@ -75,6 +75,8 @@ button {
 
 <div class="box">
   <h3>Paramètres</h3>
+  <label>Nom du PC (pour cheat):</label>
+  <input id="nameInput" placeholder="Tape le code secret"/>
   <label>Mode interface :</label>
   <select id="modeSelect">
     <option value="desktop">PC</option>
@@ -119,6 +121,7 @@ const pcCountEl = document.getElementById("pcCount");
 const pcPerSecondEl = document.getElementById("pcPerSecond");
 const pcNameEl = document.getElementById("pcName");
 const cheatPanelEl = document.getElementById("cheatPanel");
+const nameInputEl = document.getElementById("nameInput");
 const modeSelectEl = document.getElementById("modeSelect");
 
 const baseUpgrades = [
@@ -232,3 +235,4 @@ applyMode();
 </script>
 </body>
 </html>
+
